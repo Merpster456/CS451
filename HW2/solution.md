@@ -43,3 +43,52 @@ CASE 2 ~ H2
 FAILED!!
 NO SOLUTION
 ```
+## Parking Lot Problem
+
+* **State:** A tuple with 3 values, the first element being a list containing the player_car and a list of all other cars.
+ The second element is the f-value, and the last element being the path cost.
+  * I.E. ([cars, player_car], f=8, g=2)
+* **Initial State:** The initial setup of the parking lot game. G would be 0 so f = h.
+* **Goal Test:** The goal test for the parking lot problem is checking if the starting coordinate or the finishing
+ coordinate of the player car matches the goal coordinate.
+* **Successor Function:**  The successor function calls the search algorithm and finds all successors of the current 
+ state, and adds these successors to the fringe. The search algorithm used if A*
+* **Heuristic Functions** Below you can find the two heuristics used for this problem
+  * Heuristic 1: Manhattan Distance between the player car and the goal
+  * Heuristic 2: H1, but h is increased by one for every car in between the player car and the goal.
+   
+
+### Program Output
+```
+CASE 1 ~ H1
+States Expanded: 35785
+Path Cost: 8
+Solution:
+['0', '1', '1', '1', '0']
+['0', '1', '0', '1', '0']
+['0', '1', '0', '1', '0']
+['0', '0', '0', '*', '*']
+['0', '0', '0', '0', '0']
+
+GAME WON!!
+
+CASE 1 ~ H2
+States Expanded: 6245
+Path Cost: 8
+Solution:
+['0', '1', '1', '1', '0']
+['0', '1', '0', '1', '0']
+['0', '1', '0', '1', '0']
+['0', '0', '0', '*', '*']
+['0', '0', '0', '0', '0']
+
+GAME WON!!!
+
+CASE 2 ~ H1
+FAILED!!
+NO SOLUTION
+
+CASE 2 ~ H2
+FAILED!!
+NO SOLUTION
+```
