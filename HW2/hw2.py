@@ -112,30 +112,6 @@ def solveCell(case, n, heur):
 
         fringe = cellSearch(state, fringe, heur)
 
-
-        """
-        print(f"Pile 1: {case[0]}\tPile 2: {case[1]}\tPile 3: {case[2]}")
-        s_pile = int(input(f"Press [1] to choose: pile 1\tPress [2] to choose: pile 2\tPress [3] to choose: pile 3\n")) - 1
-        card = case[s_pile].pop()
-        if card == n:
-            print(f"{card} acquired, decrementing counter...")
-            n += -1
-            if n == 0:
-                print("\n\nGAME WON!!")
-                break
-            continue
-
-        t_pile = int(input(f"Move {card} to what pile? [1] [2] or [3]")) - 1
-        if case[t_pile]:
-            if case[t_pile][-1] == card - 1:
-                case[t_pile].insert(len(case[t_pile]), card)
-            else:
-                print("Cannot move card to pile!")
-                case[s_pile].append(card)
-        else:
-            case[t_pile].append(card)
-        """
-
 case1 = [[], [], [4,5,1,2,6,7,10,9,3,8]]
 n = 10
 """
@@ -152,9 +128,8 @@ solveCell(case2, n, 1)
 print("CASE 2 ~ H2")
 solveCell(case2, n, 2)
 """
-from random import randint
 
-def genGrid(cars, me, goal, n):
+def printGrid(cars, me, goal, n):
     grid = []
     for _ in range(n):
         row = []
@@ -162,6 +137,7 @@ def genGrid(cars, me, goal, n):
             row.append('0')
         grid.append(row)
 
+    grid[goal[1] - 1][goal[0] - 1] = "X"
     print(cars)
     for car in cars:
         start_x = car[0][0] - 1
@@ -195,15 +171,85 @@ def genGrid(cars, me, goal, n):
             m_y += 1
             grid[m_y][m_x] = '*'
 
-    grid[goal[1] - 1][goal[0] - 1] = "X"
+    for row in reversed(grid):
+        print(row)
 
-    return grid
 
-def pH1():
-    pass
 
-def parkSearch(case):
-    pass
+def manDist(car, goal):
+    cx, cy = car
+    gx, gy = goal
+    return abs(gx - cx) + (gy - cy)
+
+def parkSearch(state, n, fringe):
+    # Case [cars, me, goal, n, g]
+    cars, me, goal, g = state
+    g += 1
+
+    for i in range(len(cars)):
+        c_cars= [c.copy for c in cars]
+        car = c_cars.pop(i)
+        start, fin, horiz = car
+        if horiz:
+            # Check if going forward will go off grid
+            if fin[0] < n:
+                car = [(start[0] + 1, start[1]), (fin[0] + 1, fin[1]), horiz]
+                h = manDist(me[1], goal)
+                c_cars.append(car)
+                fringe.append(([c_cars, me], h + g, g))
+
+            c_cars = [c.copy for c in cars]
+            if start[0] > 0:
+                car = [(start[0] - 1, start[1]), (fin[0] - 1, fin[1]), horiz]
+                h = manDist(me[1], goal)
+                c_cars.append(car)
+                fringe.append(([c_cars, me], h + g, g))
+
+        else:
+            if fin[1] < n:
+                car = [(start[0], start[1] + 1), (fin[0], fin[1] + 1), horiz]
+                h = manDist(me[1], goal)
+                c_cars.append(car)
+                fringe.append(([c_cars, me], h + g, g))
+
+            c_cars = [c.copy for c in cars]
+            if start[0] > 0:
+                car = [(start[0], start[1] - 1), (fin[0], fin[1] - 1), horiz]
+                h = manDist(me[1], goal)
+                c_cars.append(car)
+                fringe.append(([c_cars, me], h + g, g))
+
+        c_me = me
+        start, fin, horiz = c_me
+
+        if horiz:
+            # Check if going forward will go off grid
+            if fin[0] < n:
+                c_me = [(start[0] + 1, start[1]), (fin[0] + 1, fin[1]), horiz]
+                h = manDist(c_me[1], goal)
+                fringe.append(([cars, c_me], h + g, g))
+
+            if start[0] > 0:
+                c_me = [(start[0] - 1, start[1]), (fin[0] - 1, fin[1]), horiz]
+                h = manDist(c_me[1], goal)
+                fringe.append(([cars, c_me], h + g, g))
+
+        else:
+            if fin[1] < n:
+                c_me = [(start[0], start[1] + 1), (fin[0], fin[1] + 1), horiz]
+                h = manDist(c_me[1], goal)
+                fringe.append(([cars, c_me], h + g, g))
+
+            if start[0] > 0:
+                c_me = [(start[0], start[1] - 1), (fin[0], fin[1] - 1), horiz]
+                h = manDist(c_me[1], goal)
+                fringe.append(([cars, c_me], h + g, g))
+
+    return fringe
+
+
+
+
 
 def solvePark(n, cars, me, goal):
     """
@@ -213,6 +259,7 @@ def solvePark(n, cars, me, goal):
     """
 
     temp = []
+    # Car [start, finish, horizontal]
     for car in cars:
         start = car[0]
         fin = car[-1]
@@ -241,17 +288,37 @@ def solvePark(n, cars, me, goal):
     if m_start[1] == m_fin[1]:
         me = [m_start, m_fin, 1]
 
-    grid = genGrid(cars, me, goal, n)
-    for row in reversed(grid):
-        print(row)
+    grid = printGrid(cars, me, goal, n)
 
 
     g = 0
-    fringe = parkSearch([cars, me, goal, n], g)
+    fringe = []
+    fringe = parkSearch([cars, me, goal,  g], n, fringe)
     while True:
         if not fringe:
             print("\n\nFAILED!!!")
             break
+
+        fcost = 100
+        state = -1
+        for i in range(len(fringe)):
+            if fcost > fringe[i][1]:
+                fcost = fringe[i][1]
+                state = i
+
+        # State = ([cars, me], f, g)
+        state = fringe.pop(state)
+        cars, me = state[0]
+
+        if me[1] == goal or me[0] == goal:
+            printGrid(cars, me, goal, n)
+            print("\nGAME WON!!!")
+
+        print(state)
+        printGrid(cars, me, goal, n)
+        fringe = parkSearch([cars, me, goal, g], n, fringe)
+
+
 
 
 
