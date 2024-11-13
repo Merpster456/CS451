@@ -5,19 +5,20 @@ from board import Board
 BACKGROUND = (159, 148, 188)
 BLACK = (0,0,0)
 L_GREY = (200, 201, 202)
-GREY = (140, 141, 141)
 
 # Initial values of game
-G_HEIGHT = 10
-G_WIDTH = 25
+G_HEIGHT = 16
+G_WIDTH = 30
 
 C_HEIGHT = 40
 C_WIDTH = 40
 
 X_OFFSET = 200
-Y_OFFSET = 20
+Y_OFFSET = 100
 
-grid = Board(G_HEIGHT, G_WIDTH, 50)
+MINES = 99
+
+grid = Board(G_HEIGHT, G_WIDTH, MINES)
 
 # Load necessary pictures for game
 mine = pygame.image.load("media/mine.jpg")
@@ -56,7 +57,12 @@ seven = pygame.transform.scale(seven, (C_WIDTH, C_HEIGHT))
 eight = pygame.image.load("media/eight.jpg")
 eight = pygame.transform.scale(eight, (C_WIDTH, C_HEIGHT))
 
+
+# Start game
 pygame.init()
+
+
+
 
 back = pygame.display.set_mode((1600, 900))
 board = pygame.surface.Surface((C_WIDTH * G_WIDTH, C_HEIGHT * G_HEIGHT))
@@ -70,6 +76,16 @@ pygame.display.set_caption("Minesweeper")
 # Load favicon
 ico = pygame.image.load("media/flag.png")
 pygame.display.set_icon(ico)
+
+# Create header
+GREY = pygame.color.Color(192, 192, 192)
+
+font = pygame.font.Font("media/debrosee.ttf", 100)
+m_text = font.render(f"Mines {MINES}", True, BLACK, GREY)
+m_rect = m_text.get_rect()
+m_rect.bottomleft = (200, 30)
+back.blit(m_text, m_rect)
+
 
 
 # creating a bool value which checks
@@ -105,10 +121,12 @@ while running:
                 except IndexError:
                     pass
 
+            # If left click
             elif event.button == 1:
                 try:
                     grid.board[row][column].seen = True
                     if grid.board[row][column].value == 0:
+                        # Reveals all adjacent empty cells
                         grid.reveal(column, row)
 
                 except IndexError:
@@ -121,6 +139,7 @@ while running:
             color = GREY
             cell = grid.board[row][column]
             if cell.seen:
+                # Give cell the picture corresponding to its value
                 if cell.value == 1:
                     board.blit(one, (C_WIDTH * column, C_HEIGHT * row))
                 elif cell.value == 2:
@@ -147,14 +166,6 @@ while running:
                 else:
                     board.blit(unseen, (C_WIDTH * column, C_HEIGHT * row))
 
-            """
-            pygame.draw.rect(board,
-                             color,
-                             [(MARGIN + C_WIDTH) * column + MARGIN,
-                              (MARGIN + C_HEIGHT) * row + MARGIN,
-                              C_WIDTH,
-                              C_HEIGHT])
-            """
     back.blit(board, (X_OFFSET, Y_OFFSET))
     clock.tick(50)
     pygame.display.flip()
