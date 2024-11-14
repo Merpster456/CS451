@@ -165,7 +165,7 @@ class Board:
         # Initial Values
         self.height = h
         self.width = w
-        self.mines = m
+        self.mines = []
         self.board = []
 
         # Create grid for the board
@@ -188,6 +188,7 @@ class Board:
                     continue
                 else:
                     self.board[y][x] = Cell(-1)
+                    self.mines.append((x,y))
                     break
 
         print(self.__str__())
