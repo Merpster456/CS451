@@ -80,7 +80,9 @@ def play_minesweeper(rows, cols, num_mines, move1):
 if __name__ == '__main__':
     rows, cols, num_mines = 5, 5, 5
     row, col = map(int, input("Enter your move as 'row col': ").split())
+
     create_board(rows, cols, num_mines, (row, col))
+    play_minesweeper(rows, cols, num_mines,(row, col))
 
 
 
