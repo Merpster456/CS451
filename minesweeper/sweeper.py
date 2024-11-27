@@ -1,5 +1,4 @@
 import pygame
-from mcts import MCTSAgent
 from board import Board
 
 # Color scheme
