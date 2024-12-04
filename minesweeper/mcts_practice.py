@@ -98,6 +98,7 @@ class MCTS_Node:
         return self.best_child(c_param=0.)
     
     def get_legal_actions(self):
+        #TODO
         '''
         This is an opportunity to set our search space. 
         It is possible we can reduce legal moves to "reasonable moves"
@@ -105,39 +106,21 @@ class MCTS_Node:
         
         returns: a list of possible move
         '''
-        # Search space should be "island" with a 1 square buffer 
-        legal_moves = []
-
-        for y in range(self.height):
-            for x in range(self.width):
-                cell = self.board[y][x]
-                if isinstance(cell, Cell) and (cell.seen or cell.flag):
-                    continue
-
-                # unrevealed cells are "reasonable" if they touch a revealed cell
-                for dx in [-1, 0, 1]:
-                    nx, ny = x + dx, y + dy
-                    if 0 <= nx < self.width and 0 <= ny < self.height:
-                        neighbor = self.board[ny][nx]
-                        if isinstance(neighbor, Cell) and neighbor.seen:
-                            legal_moves.append((x, y))
-                            break
-                else:
-                    continue
-                break
-
-    return legal_moves
+        pass
 
 
     def is_game_over(self):
+        #TODO
         '''
         returns true if game is over else false
         '''
+
 
         
         pass
 
     def game_result(self):
+        #TODO
         '''
         return 1 or -1 for win or loss. 
         (minesweeper has no tie condition)
@@ -146,11 +129,12 @@ class MCTS_Node:
         pass
 
     def move(self, action):
+        #TODO
         '''
         update state based on moves. 
         returns the new game state.
         '''
-        
+
         pass
 
     def main():
