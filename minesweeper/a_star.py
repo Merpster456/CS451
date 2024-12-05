@@ -4,7 +4,7 @@ Authors: Ryan Quirk
 
 """
 
-from board import Board
+from board import Board, Cell
 
 hundredCount = 0
 zeroCount = 0
@@ -149,46 +149,46 @@ def rule3(grid):
 
                 # left
                 if 0 <= x - 1 < grid.width:
-                    if (grid.board[y][x - 1].edge and grid.seenCount(x, y) == 1):
+                    if (grid.board[y][x - 1].edge and grid.seenCount(x-1, y) == 1):
                         count += 1
 
                 # upper left
                 if 0 <= x - 1 < grid.width and 0 <= y - 1 < grid.height:
-                    if (grid.board[y - 1][x - 1].edge and grid.seenCount(x, y)):
+                    if (grid.board[y - 1][x - 1].edge and grid.seenCount(x-1, y-1) == 1):
                         count += 1
 
                 # up
                 if 0 <= y - 1 < grid.height:
-                    if (grid.board[y - 1][x].edge and grid.seenCount(x, y)):
+                    if (grid.board[y - 1][x].edge and grid.seenCount(x, y-1) == 1):
                         count += 1
 
                 # upper right
                 if 0 <= x + 1 < grid.width and 0 <= y - 1 < grid.height:
-                    if (grid.board[y - 1][x + 1].edge and grid.seenCount(x, y)):
+                    if (grid.board[y - 1][x + 1].edge and grid.seenCount(x+1, y-1) == 1):
                         count += 1
 
                 # right
                 if 0 <= x + 1 < grid.width:
-                    if (grid.board[y][x + 1].edge and grid.seenCount(x, y)):
+                    if (grid.board[y][x + 1].edge and grid.seenCount(x+1, y) == 1):
                         count += 1
 
                 # bottom right
                 if 0 <= x + 1 < grid.width and 0 <= y + 1 < grid.height:
-                    if (grid.board[y + 1][x + 1].edge and grid.seenCount(x, y)):
+                    if (grid.board[y + 1][x + 1].edge and grid.seenCount(x+1, y+1) == 1):
                         count += 1
 
                 # bottom
                 if 0 <= y + 1 < grid.height:
-                    if (grid.board[y + 1][x].edge and grid.seenCount(x, y)):
+                    if (grid.board[y + 1][x].edge and grid.seenCount(x, y +1) == 1):
                         count += 1
 
                 # bottom left
                 if 0 <= x - 1 < grid.width and 0 <= y + 1 < grid.height:
-                    if (grid.board[y + 1][x - 1].edge and grid.seenCount(x, y)):
+                    if (grid.board[y + 1][x - 1].edge and grid.seenCount(x-1, y+1) == 1):
                         count += 1
 
                 if count == grid.board[y][x].edgeCount:
-                    probability = round(grid.board[y][x].value / grid.board[y][x].edgeCount * 100)
+                    probability = round((grid.board[y][x].value / grid.board[y][x].edgeCount) * 100)
 
                     # left
                     if 0 <= x - 1 < grid.width:
@@ -223,21 +223,47 @@ def rule3(grid):
                         grid.board[y+1][x-1].prob = probability
 
 
-grid = Board(16, 30, 99, 5, 5)
-print(grid)
+def main(grid):
 
-grid.edgeCount()
+    grid.edgeCount()
 
-ret1 = True
-ret2 = True
-i = 0
-while(ret1 or ret2):
-    ret1 = rule1(grid)
-    ret2 = rule2(grid)
-    i+=1
+    ret1 = True
+    ret2 = True
+    i = 0
+    while(ret1 or ret2):
+        ret1 = rule1(grid)
+        ret2 = rule2(grid)
+        i+=1
 
-rule3(grid)
+    rule3(grid)
 
-print(grid)
-print(i)
+    free = grid.freeCells()
+    print(grid)
 
+
+    indx = grid.findNextEdge(0,0)
+    x = indx[0]
+    y = indx[1]
+
+    while y > -1:
+
+        # Appending the tuple (x, y, isMine)
+        grid.arrGrid.append((x,y, None))
+        if x == grid.width - 1:
+            indx = grid.findNextEdge(0,y+1)
+            x = indx[0]
+            y = indx[1]
+        else:
+            indx = grid.findNextEdge(x+1, y)
+            x = indx[0]
+            y = indx[1]
+
+    if len(grid.arrGrid) > 0:
+        grid.genArr(0)
+
+    print(grid)
+    print(i)
+
+
+if __name__ == "__main__":
+    main(Board(16,30,99,5,5))

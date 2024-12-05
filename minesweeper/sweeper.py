@@ -1,4 +1,5 @@
 import pygame
+from a_star import main as a_star
 from board import Board
 
 # Color scheme
@@ -24,6 +25,9 @@ flags = 0
 
 
 # Load necessary pictures for game
+free = pygame.image.load("media/free.png")
+free = pygame.transform.scale(free, (C_WIDTH, C_HEIGHT))
+
 mine = pygame.image.load("media/mine.jpg")
 mine = pygame.transform.scale(mine, (C_WIDTH, C_HEIGHT))
 
@@ -96,6 +100,8 @@ def reveal_mines(mines, board):
 running = True
 gameover = False
 firstMove = True
+free_list = []
+a_toggle = False
 clock = pygame.time.Clock()
 
 
@@ -153,7 +159,6 @@ while running:
                 if firstMove:
                     firstMove = False
                     grid = Board(G_HEIGHT, G_WIDTH, MINES, column, row)
-                    print(grid)
 
                 # If middle click or right click change flag value
                 if event.button == 2 or event.button == 3:
@@ -167,6 +172,7 @@ while running:
 
                 # If left click
                 elif event.button == 1:
+                    a_toggle = True
                     try:
                         grid.board[row][column].seen = True
                         if grid.board[row][column].value == 0:
@@ -178,6 +184,12 @@ while running:
 
                 print("Click ", pos, "Grid coordinates: ", row, column)
 
+        # SOLVER
+        if a_toggle:
+            free_list = a_star(grid)
+            a_toggle = False
+
+
         for row in range(G_HEIGHT):
             for column in range(G_WIDTH):
                 color = GREY
@@ -186,6 +198,11 @@ while running:
                     continue
 
                 cell = grid.board[row][column]
+
+                if (column, row) in free_list:
+                    board.blit(free, (C_WIDTH * column, C_HEIGHT * row))
+                    continue
+
                 if cell.seen:
                     # Give cell the picture corresponding to its value
                     if cell.value == 1:

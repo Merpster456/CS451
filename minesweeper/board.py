@@ -20,6 +20,8 @@ class Board:
         self.width = w
         self.mines = []
         self.board = []
+        self.arrGrid = []
+        self.edgeArr = []
 
         safezone = [(x0, y0), (x0, y0 - 1), (x0 + 1, y0 - 1), (x0 + 1, y0), (x0 + 1, y0 + 1),
                     (x0, y0 + 1), (x0 - 1, y0 + 1), (x0 - 1, y0), (x0 - 1, y0 - 1)]
@@ -164,6 +166,14 @@ class Board:
             (x,y) = fringe.pop()
             self.reveal(x, y, fringe)
 
+    def freeCells(self):
+        free = []
+        for y in range(len(self.board)):
+            for x in range(len(self.board[0])):
+                if self.board[y][x].prob == 0:
+                    free.append((x,y))
+
+        return free
 
     def mineCheck(self, x, y):
         mines = 0
@@ -228,6 +238,81 @@ class Board:
                 mines += 1
 
         return mines
+
+    def findNextEdge(self, x, y):
+        for i in range(y, len(self.board)):
+            for j in range(x, len(self.board[0])):
+                if self.board[i][j].edge and self.board[i][j].prob < 0:
+                    return [j,i]
+            y = 0
+        return [j, i]
+
+    def genArr(self, indx):
+        x = self.arrGrid[indx][0]
+        y = self.arrGrid[indx][1]
+
+    # How many mines can be placed around a cell when generating arrangements
+    def mineCount(self, x, y):
+        count = 0
+        for i in range(len(self.arrGrid)):
+            if (y-1 <= self.arrGrid[i][1] <= y+1 and x - 1 <= self.arrGrid[i][0] <= x + 1):
+                if self.arrGrid[i][3]:
+                    count += 1
+
+        return count
+
+    def canBeMine(self, x, y):
+
+        # left
+        if 0 <= x - 1 < self.width:
+            if (self.board[y][x - 1].seen and self.board[y][x-1].value <=
+                    self.mineCount(x-1, y) + self.probHundredCount( x-1, y)):
+                return False
+
+        # upper left
+        if 0 <= x - 1 < self.width and 0 <= y - 1 < self.height:
+            if (self.board[y-1][x - 1].seen and self.board[y-1][x-1].value <=
+                    self.mineCount(x-1, y-1) + self.probHundredCount( x-1, y-1)):
+                return False
+
+        # up
+        if 0 <= y - 1 < self.height:
+            if (self.board[y-1][x].seen and self.board[y-1][x].value <=
+                    self.mineCount(x, y-1) + self.probHundredCount(x, y-1)):
+                return False
+
+        # upper right
+        if 0 <= x + 1 < self.width and 0 <= y - 1 < self.height:
+            if (self.board[y-1][x+1].seen and self.board[y-1][x+1].value <=
+                    self.mineCount(x+1, y-1) + self.probHundredCount(x+1, y-1)):
+                return False
+
+        # right
+        if 0 <= x + 1 < self.width:
+            if (self.board[y][x+1].seen and self.board[y][x+1].value <=
+                    self.mineCount(x+1, y) + self.probHundredCount(x+1, y)):
+                return False
+
+        # bottom right
+        if 0 <= x + 1 < self.width and 0 <= y + 1 < self.height:
+            if (self.board[y+1][x+1].seen and self.board[y+1][x+1].value <=
+                    self.mineCount(x+1, y+1) + self.probHundredCount(x+1, y+1)):
+                return False
+
+        # bottom
+        if 0 <= y + 1 < self.height:
+            if (self.board[y+1][x].seen and self.board[y+1][x].value <=
+                    self.mineCount(x, y+1) + self.probHundredCount(x, y+1)):
+                return False
+
+        # bottom left
+        if 0 <= x - 1 < self.width and 0 <= y + 1 < self.height:
+            if (self.board[y + 1][x-1].seen and self.board[y + 1][x-1].value <=
+                    self.mineCount(x-1, y + 1) + self.probHundredCount(x-1, y + 1)):
+                return False
+
+        return True
+
 
     def edgeCount(self):
         for y in range(len(self.board)):
@@ -381,7 +466,7 @@ class Board:
         count = 0
 
         # left
-        if  0 <= x -1 < self.width:
+        if  0 <= x-1 < self.width:
             if self.board[y][x-1].prob == 0:
                 count += 1
 
