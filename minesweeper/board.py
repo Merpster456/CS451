@@ -1,4 +1,5 @@
 from random import randrange
+from math import comb
 
 class Cell:
     def __init__(self, value):
@@ -7,6 +8,7 @@ class Cell:
         self.flag = False
         self.edge = False
         self.edgeCount = 0
+        self.mineArr = 0
         self.prob = -1
 
     def __str__(self):
@@ -18,10 +20,12 @@ class Board:
         # Initial Values
         self.height = h
         self.width = w
+        self.numMines = m
         self.mines = []
         self.board = []
         self.arrGrid = []
         self.edgeArr = []
+        self.hundredCount = 0
 
         safezone = [(x0, y0), (x0, y0 - 1), (x0 + 1, y0 - 1), (x0 + 1, y0), (x0 + 1, y0 + 1),
                     (x0, y0 + 1), (x0 - 1, y0 + 1), (x0 - 1, y0), (x0 - 1, y0 - 1)]
@@ -247,72 +251,192 @@ class Board:
             y = 0
         return [j, i]
 
-    def genArr(self, indx):
+    def genArr(self, grid, indx):
         x = self.arrGrid[indx][0]
         y = self.arrGrid[indx][1]
 
-    # How many mines can be placed around a cell when generating arrangements
-    def mineCount(self, x, y):
+        if self.canBeMine(grid, x, y):
+            y_pattern = self.arrGrid.copy()
+            y_pattern[indx][2] = True
+
+            if indx < len(self.arrGrid) - 1:
+                self.genArr(y_pattern, indx+1)
+            else:
+                self.edgeArr.append(y_pattern)
+
+        if self.canNotBeMine(grid, x, y):
+            n_pattern = self.arrGrid.copy()
+            n_pattern[indx][2] = False
+            if indx < len(self.arrGrid) - 1:
+                self.genArr(n_pattern, indx+1)
+            else:
+                self.edgeArr.append(n_pattern)
+
+    # Calculate probabilities from mine arrangements
+    def probCalc(self):
+        arrCount = 0
+        nonEdge = self.nonEdgeCount()
+
+        for y in range(len(self.edgeArr)):
+            minesPlaced = 0
+            for x in range(len(self.edgeArr[0])):
+                if self.edgeArr[y][x][2]:
+                    minesPlaced += 1
+
+        remaingMines = self.numMines - minesPlaced - self.hundredCount
+
+        if remaingMines >= 0 and remaingMines <= nonEdge:
+            nonEdgeCombinations = comb(nonEdge, remaingMines)
+            for x in range(len(self.edgeArr[0])):
+                if self.edgeArr[y][x][2]:
+                    self.board[self.edgeArr[1]][self.edgeArr[0]].mineArr += nonEdgeCombinations
+
+            arrCount += nonEdgeCombinations
+
+            for i in range(len(self.board)):
+                for j in range(len(self.board[0])):
+                    if not self.board[i][j].seen and not self.board[i][j].edge:
+                        self.board[i][j].mineArr += remaingMines / nonEdge * nonEdgeCombinations
+
+        for y in range(len(self.board)):
+            for x in range(len(self.board[0])):
+                if self.board[y][x].edge and self.board[y][x].prob < 0:
+                    self.board[y][x].prob = round(self.board[y][x].mineArr / arrCount * 100)
+
+                if not self.board[y][x].seen and not self.board[y][x].edge and self.board[y][x].prob < 0:
+                    self.board[y][x].prob = round(self.board[y][x].mineArr / arrCount * 100)
+
+    # How many nonmines can be placed around a cell when generating arrangements
+    def noMineCount(self, grid, x, y):
         count = 0
-        for i in range(len(self.arrGrid)):
-            if (y-1 <= self.arrGrid[i][1] <= y+1 and x - 1 <= self.arrGrid[i][0] <= x + 1):
-                if self.arrGrid[i][3]:
+        for i in range(len(grid)):
+            if (y-1 <= grid[i][1] <= y+1 and x - 1 <= grid[i][0] <= x + 1):
+                if not grid[i][3]:
                     count += 1
 
         return count
 
-    def canBeMine(self, x, y):
+    def canNotBeMine(self, grid, x, y):
+        # left
+        if 0 <= x - 1 < self.width:
+            if (self.board[y][x - 1].seen and self.board[y][x - 1].value >= self.board[y][x-1].edgeCount -
+                    self.noMineCount(grid, x - 1, y) + self.probZeroCount(x - 1, y)):
+                return False
 
+        # upper left
+        if 0 <= x - 1 < self.width and 0 <= y - 1 < self.height:
+            if (self.board[y-1][x - 1].seen and self.board[y-1][x - 1].value >= self.board[y-1][x-1].edgeCount -
+                    self.noMineCount(grid, x - 1, y-1) + self.probZeroCount(x - 1, y-1)):
+                return False
+
+        # up
+        if 0 <= y - 1 < self.height:
+            if (self.board[y-1][x].seen and self.board[y-1][x].value >= self.board[y-1][x].edgeCount -
+                    self.noMineCount(grid, x, y-1) + self.probZeroCount(x, y-1)):
+                return False
+
+        # upper right
+        if 0 <= x + 1 < self.width and 0 <= y - 1 < self.height:
+            if (self.board[y-1][x+1].seen and self.board[y-1][x+1].value >= self.board[y-1][x+1].edgeCount -
+                    self.noMineCount(grid, x+1, y-1) + self.probZeroCount(x+1, y-1)):
+                return False
+
+        # right
+        if 0 <= x + 1 < self.width:
+            if (self.board[y][x+1].seen and self.board[y][x+1].value >= self.board[y][x+1].edgeCount -
+                    self.noMineCount(grid, x+1, y) + self.probZeroCount(x+1, y)):
+                return False
+
+        # bottom right
+        if 0 <= x + 1 < self.width and 0 <= y + 1 < self.height:
+            if (self.board[y+1][x+1].seen and self.board[y+1][x+1].value >= self.board[y+1][x+1].edgeCount -
+                    self.noMineCount(grid, x+1, y+1) + self.probZeroCount(x+1, y+1)):
+                return False
+
+        # bottom
+        if 0 <= y + 1 < self.height:
+            if (self.board[y+1][x].seen and self.board[y+1][x].value >= self.board[y+1][x].edgeCount -
+                    self.noMineCount(grid, x, y+1) + self.probZeroCount(x, y+1)):
+                return False
+
+        # bottom left
+        if 0 <= x - 1 < self.width and 0 <= y + 1 < self.height:
+            if (self.board[y+1][x-1].seen and self.board[y+1][x-1].value >= self.board[y+1][x-1].edgeCount -
+                    self.noMineCount(grid, x-1, y+1) + self.probZeroCount(x-1, y+1)):
+                return False
+
+        return True
+
+    # How many mines can be placed around a cell when generating arrangements
+    def mineCount(self, grid, x, y):
+        count = 0
+        for i in range(len(grid)):
+            if (y - 1 <= grid[i][1] <= y + 1 and x - 1 <= grid[i][0] <= x + 1):
+                if grid[i][3]:
+                    count += 1
+
+        return count
+
+    def canBeMine(self, grid, x, y):
         # left
         if 0 <= x - 1 < self.width:
             if (self.board[y][x - 1].seen and self.board[y][x-1].value <=
-                    self.mineCount(x-1, y) + self.probHundredCount( x-1, y)):
+                    self.mineCount(grid, x-1, y) + self.probHundredCount( x-1, y)):
                 return False
 
         # upper left
         if 0 <= x - 1 < self.width and 0 <= y - 1 < self.height:
             if (self.board[y-1][x - 1].seen and self.board[y-1][x-1].value <=
-                    self.mineCount(x-1, y-1) + self.probHundredCount( x-1, y-1)):
+                    self.mineCount(grid, x-1, y-1) + self.probHundredCount( x-1, y-1)):
                 return False
 
         # up
         if 0 <= y - 1 < self.height:
             if (self.board[y-1][x].seen and self.board[y-1][x].value <=
-                    self.mineCount(x, y-1) + self.probHundredCount(x, y-1)):
+                    self.mineCount(grid, x, y-1) + self.probHundredCount(x, y-1)):
                 return False
 
         # upper right
         if 0 <= x + 1 < self.width and 0 <= y - 1 < self.height:
             if (self.board[y-1][x+1].seen and self.board[y-1][x+1].value <=
-                    self.mineCount(x+1, y-1) + self.probHundredCount(x+1, y-1)):
+                    self.mineCount(grid, x+1, y-1) + self.probHundredCount(x+1, y-1)):
                 return False
 
         # right
         if 0 <= x + 1 < self.width:
             if (self.board[y][x+1].seen and self.board[y][x+1].value <=
-                    self.mineCount(x+1, y) + self.probHundredCount(x+1, y)):
+                    self.mineCount(grid, x+1, y) + self.probHundredCount(x+1, y)):
                 return False
 
         # bottom right
         if 0 <= x + 1 < self.width and 0 <= y + 1 < self.height:
             if (self.board[y+1][x+1].seen and self.board[y+1][x+1].value <=
-                    self.mineCount(x+1, y+1) + self.probHundredCount(x+1, y+1)):
+                    self.mineCount(grid, x+1, y+1) + self.probHundredCount(x+1, y+1)):
                 return False
 
         # bottom
         if 0 <= y + 1 < self.height:
             if (self.board[y+1][x].seen and self.board[y+1][x].value <=
-                    self.mineCount(x, y+1) + self.probHundredCount(x, y+1)):
+                    self.mineCount(grid, x, y+1) + self.probHundredCount(x, y+1)):
                 return False
 
         # bottom left
         if 0 <= x - 1 < self.width and 0 <= y + 1 < self.height:
             if (self.board[y + 1][x-1].seen and self.board[y + 1][x-1].value <=
-                    self.mineCount(x-1, y + 1) + self.probHundredCount(x-1, y + 1)):
+                    self.mineCount(grid, x-1, y + 1) + self.probHundredCount(x-1, y + 1)):
                 return False
 
         return True
 
+    # Count how many cells aren't open or bordering open cells
+    def nonEdgeCount(self):
+        count = 0
+        for y in range(len(self.board)):
+            for x in range(len(self.board[0])):
+                if not self.board[y][x].seen and not self.board[y][x].edge:
+                    count += 1
+
+        return count
 
     def edgeCount(self):
         for y in range(len(self.board)):

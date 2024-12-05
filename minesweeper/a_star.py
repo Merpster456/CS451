@@ -74,6 +74,8 @@ def rule1(grid):
                         grid.board[y + 1][x - 1].prob = 100
                         hundredCount += 1
                         ret = True
+
+    grid.hundredCount = hundredCount
     return ret
 
 def rule2(grid):
@@ -225,6 +227,15 @@ def rule3(grid):
 
 def main(grid):
 
+    for y in range(len(grid.board)):
+        for x in range(len(grid.board[0])):
+            grid.board[y][x].mineArr = 0
+            grid.board[y][x].prob = -1
+
+    grid.hundredCount = 0
+    grid.arrGrid = []
+    grid.edgeArr = []
+
     grid.edgeCount()
 
     ret1 = True
@@ -259,7 +270,8 @@ def main(grid):
             y = indx[1]
 
     if len(grid.arrGrid) > 0:
-        grid.genArr(0)
+        grid.genArr(grid.arrGrid, 0)
+        grid.probCalc()
 
     print(grid)
     print(i)
