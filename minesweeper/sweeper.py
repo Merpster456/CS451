@@ -22,7 +22,6 @@ Y_OFFSET = 150
 MINES = 99
 flags = 0
 
-grid = Board(G_HEIGHT, G_WIDTH, MINES)
 
 # Load necessary pictures for game
 mine = pygame.image.load("media/mine.jpg")
@@ -96,13 +95,16 @@ def reveal_mines(mines, board):
 # if game is running
 running = True
 gameover = False
+firstMove = True
 clock = pygame.time.Clock()
+
 
 # keep game running till running is true
 while running:
 
     # Check for event if user has pushed
     # any event in queue
+
     if gameover:
 
         # Reveal mines
@@ -130,8 +132,8 @@ while running:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
                 if r_rec.collidepoint(pos):
-                    grid = Board(G_HEIGHT, G_WIDTH, MINES)
                     gameover = False
+                    firstMove = True
 
     else:
         for event in pygame.event.get():
@@ -148,6 +150,10 @@ while running:
                 print(pos)
                 column = (pos[0] - X_OFFSET) // C_WIDTH
                 row = (pos[1] - Y_OFFSET) // C_HEIGHT
+                if firstMove:
+                    firstMove = False
+                    grid = Board(G_HEIGHT, G_WIDTH, MINES, column, row)
+                    print(grid)
 
                 # If middle click or right click change flag value
                 if event.button == 2 or event.button == 3:
@@ -175,6 +181,10 @@ while running:
         for row in range(G_HEIGHT):
             for column in range(G_WIDTH):
                 color = GREY
+                if firstMove:
+                    board.blit(unseen, (C_WIDTH * column, C_HEIGHT * row))
+                    continue
+
                 cell = grid.board[row][column]
                 if cell.seen:
                     # Give cell the picture corresponding to its value
