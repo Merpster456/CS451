@@ -181,7 +181,9 @@ def calculate_mine_probabilities(board, remaining_mines):
         # for each arrangement, probability of a mine being in a cell is (total mines - m_used) / total arrangements
         # so the probability of a mine being in a cell is (total mines - m_used) / total arrangements * 100
         # superimpose this probability on the existing probability of a mine being in a cell
-        probabilities[r][c] = int(unbordered_prob + 0.5)  # Round to nearest integer
+        # probabilities[r][c] = int(unbordered_prob + 0.5)  # Round to nearest integer
+        probabilities[r][c] = -1
+        
 
 
 
