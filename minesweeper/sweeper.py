@@ -8,6 +8,7 @@ BLACK = (0,0,0)
 L_GREY = (200, 201, 202)
 GREY = (192, 192, 192)
 RED = (196, 59, 54)
+GREEN = (0, 128, 0)
 
 
 # Initial values of game
@@ -99,10 +100,12 @@ def reveal_mines(mines, board):
 # if game is running
 running = True
 gameover = False
+win = False
 firstMove = True
 free_list = []
 a_toggle = False
 clock = pygame.time.Clock()
+grid = []
 
 
 # keep game running till running is true
@@ -116,10 +119,17 @@ while running:
         # Reveal mines
         reveal_mines(grid.mines, board)
 
-        # GAME OVER text
-        lose_txt = l_font.render("GAME OVER", True, RED)
-        lose_rect = lose_txt.get_rect(center=(board.get_width() // 2, board.get_height() // 2))
-        board.blit(lose_txt, lose_rect)
+        if win:
+            # WIN text
+            win_txt = l_font.render("YOU WIN", True, GREEN)
+            win_rect = win_txt.get_rect(center=(board.get_width() // 2, board.get_height() // 2))
+            board.blit(win_txt, win_rect)
+
+        else:
+            # GAME OVER text
+            lose_txt = l_font.render("GAME OVER", True, RED)
+            lose_rect = lose_txt.get_rect(center=(board.get_width() // 2, board.get_height() // 2))
+            board.blit(lose_txt, lose_rect)
 
         # Retry text
         r_text = font.render("Retry", True, BLACK, GREY)
@@ -140,9 +150,11 @@ while running:
                 if r_rec.collidepoint(pos):
                     gameover = False
                     firstMove = True
+                    win = False
 
     else:
         for event in pygame.event.get():
+
 
             # if event is of type quit then
             # set running bool to false
@@ -153,12 +165,12 @@ while running:
             # Handle mouse click
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                print(pos)
                 column = (pos[0] - X_OFFSET) // C_WIDTH
                 row = (pos[1] - Y_OFFSET) // C_HEIGHT
                 if firstMove:
                     firstMove = False
                     grid = Board(G_HEIGHT, G_WIDTH, MINES, column, row)
+                    a_toggle = True
 
                 # If middle click or right click change flag value
                 if event.button == 2 or event.button == 3:
@@ -172,7 +184,18 @@ while running:
 
                 # If left click
                 elif event.button == 1:
-                    a_toggle = True
+                    moves = a_star(grid)
+                    ((x, y), prob) = moves.pop(0)
+                    print(grid)
+                    grid.printProbGrid()
+                    print(((x, y), prob))
+                    if prob == 100:
+                        pass
+                        #grid.printProbGrid()
+                        #print(moves)
+                    else:
+                        column, row = x, y
+
                     try:
                         grid.board[row][column].seen = True
                         if grid.board[row][column].value == 0:
@@ -182,12 +205,31 @@ while running:
                     except IndexError:
                         pass
 
-                print("Click ", pos, "Grid coordinates: ", row, column)
+                if grid.checkWin():
+                    win = True
+                    gameover = True
+                    """
+                    a_toggle = True
+                    try:
+                        grid.board[row][column].seen = True
+                        if grid.board[row][column].value == 0:
+                            # Reveals all adjacent empty cells
+                            grid.reveal(column, row)
 
+                    except IndexError:
+                        pass
+                    """
+
+
+        """
         # SOLVER
         if a_toggle:
-            free_list = a_star(grid)
             a_toggle = False
+            moves = a_star(grid)
+            ((x, y), prob) = moves.pop(0)
+            if prob != 100:
+                column, row = x, y
+        """
 
 
         for row in range(G_HEIGHT):
@@ -199,13 +241,17 @@ while running:
 
                 cell = grid.board[row][column]
 
+
                 if (column, row) in free_list:
                     board.blit(free, (C_WIDTH * column, C_HEIGHT * row))
                     continue
 
                 if cell.seen:
+                    if cell.mine:
+                        gameover = True
+                        board.blit(mine, (C_WIDTH * column, C_HEIGHT * row))
                     # Give cell the picture corresponding to its value
-                    if cell.value == 1:
+                    elif cell.value == 1:
                         board.blit(one, (C_WIDTH * column, C_HEIGHT * row))
                     elif cell.value == 2:
                         board.blit(two, (C_WIDTH * column, C_HEIGHT * row))
@@ -221,9 +267,6 @@ while running:
                         board.blit(seven, (C_WIDTH * column, C_HEIGHT * row))
                     elif cell.value == 8:
                         board.blit(eight, (C_WIDTH * column, C_HEIGHT * row))
-                    elif cell.value == -1:
-                        gameover = True
-                        board.blit(mine, (C_WIDTH * column, C_HEIGHT * row))
                     else:
                         board.blit(seen, (C_WIDTH * column, C_HEIGHT * row))
                 else:
@@ -231,6 +274,8 @@ while running:
                         board.blit(flag, (C_WIDTH * column, C_HEIGHT * row))
                     else:
                         board.blit(unseen, (C_WIDTH * column, C_HEIGHT * row))
+
+
 
         # Update mine counter
         back.fill(BACKGROUND)
@@ -240,5 +285,6 @@ while running:
 
     clock.tick(50)
     pygame.display.flip()
+
 
 pygame.quit()

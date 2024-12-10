@@ -6,7 +6,6 @@ Authors: Ryan Quirk
 
 from board import Board, Cell
 
-hundredCount = 0
 zeroCount = 0
 
 def rule1(grid):
@@ -14,7 +13,7 @@ def rule1(grid):
     Label cells that must be a mine by basic logic
     """
     ret = False
-    global hundredCount
+    hundredCount = 0
 
     for y in range(len(grid.board)):
         for x in range(len(grid.board[0])):
@@ -75,7 +74,7 @@ def rule1(grid):
                         hundredCount += 1
                         ret = True
 
-    grid.hundredCount = hundredCount
+    grid.hundredCount += hundredCount
     return ret
 
 def rule2(grid):
@@ -86,9 +85,7 @@ def rule2(grid):
 
     for y in range(len(grid.board)):
         for x in range(len(grid.board[0])):
-            if (grid.board[y][x].edgeCount > 0 and grid.board[y][x].value == grid.board[y][
-                x].edgeCount - grid.probHundredCount(x, y)):
-
+            if (grid.board[y][x].edgeCount > 0 and grid.board[y][x].value == grid.probHundredCount(x, y)):
                 # left
                 if 0 <= x - 1 < grid.width:
                     if (grid.board[y][x - 1].edge and grid.board[y][x - 1].prob < 0):
@@ -231,6 +228,8 @@ def main(grid):
         for x in range(len(grid.board[0])):
             grid.board[y][x].mineArr = 0
             grid.board[y][x].prob = -1
+            grid.board[y][x].edgeCount = 0
+            grid.board[y][x].edge = False
 
     grid.hundredCount = 0
     grid.arrGrid = []
@@ -248,18 +247,14 @@ def main(grid):
 
     rule3(grid)
 
-    free = grid.freeCells()
-    print(grid)
-
-
     indx = grid.findNextEdge(0,0)
     x = indx[0]
     y = indx[1]
 
     while y > -1:
 
-        # Appending the tuple (x, y, isMine)
-        grid.arrGrid.append((x,y, None))
+        # Appending the list [x, y, isMine]
+        grid.arrGrid.append([x,y, None])
         if x == grid.width - 1:
             indx = grid.findNextEdge(0,y+1)
             x = indx[0]
@@ -273,8 +268,15 @@ def main(grid):
         grid.genArr(grid.arrGrid, 0)
         grid.probCalc()
 
-    print(grid)
-    print(i)
+    else:
+        nonEdge = grid.nonEdgeCount()
+        remaining_mines = grid.numMines - grid.hundredCount
+        for y in range(len(grid.board)):
+            for x in range(len(grid.board[0])):
+                if not grid.board[y][x].seen and not grid.board[y][x]:
+                    grid.board[y][x].prob = round((remaining_mines / nonEdge) * 100)
+
+    return grid.moves()
 
 
 if __name__ == "__main__":
