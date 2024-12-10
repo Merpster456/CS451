@@ -134,16 +134,18 @@ def test_probability(h,w,m):
     for row in probabilities:
         print(row)
 
+    r,c = get_next_move(bboard, probabilities)
+    print(f"AI selects cell ({r}, {c})")
 
 
 if __name__ == '__main__':
     rows, cols, num_mines = 16,30,90
 
     # # play_minesweeper(rows, cols, num_mines, move1)
-    # greedy_sweeper(rows, cols, num_mines, move1)
+    greedy_sweeper(rows, cols, num_mines, move1 = (0, 0))
    
-    start_time = time.time()
-    test_probability(rows, cols, num_mines)
-    end_time = time.time()
+    # start_time = time.time()
+    # test_probability(rows, cols, num_mines)
+    # end_time = time.time()
 
-    print(f"Execution time: {end_time - start_time} seconds")
+    # print(f"Execution time: {end_time - start_time} seconds")
