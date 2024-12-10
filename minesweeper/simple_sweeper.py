@@ -104,6 +104,7 @@ def greedy_sweeper(rows, cols, num_mines, move1):
 
         # Calculate probabilities and get the next move
         probabilities = calculate_mine_probabilities(p_board, num_mines)
+        # probabilities = calculate_mine_probabilities(tuple(map(tuple, board)), num_mines)
         print("Mine probabilities:")
         for row in probabilities:
             print(row)
@@ -119,31 +120,14 @@ def greedy_sweeper(rows, cols, num_mines, move1):
         else:
             reveal_cell(board, revealed, row, col)
 
-def test_probability(h,w,m):
-    board = create_board(h,w,m)
-    move1 = (0, 0)
-    revealed = [[False for _ in range(w)] for _ in range(h)]
-    reveal_cell(board,revealed=revealed,row=move1[0],col=move1[1])
-    bboard = get_current_board(board, revealed)  
-  
-    probabilities = calculate_mine_probabilities(bboard, 4)
-    print("Board:")
-    for row in bboard:
-        print(row)
-    print("Mine Probabilities:")
-    for row in probabilities:
-        print(row)
-
-    r,c = get_next_move(bboard, probabilities)
-    print(f"AI selects cell ({r}, {c})")
 
 
 if __name__ == '__main__':
-    rows, cols, num_mines = 16,30,90
+    rows, cols, num_mines = 9,9,10
 
     # # play_minesweeper(rows, cols, num_mines, move1)
     greedy_sweeper(rows, cols, num_mines, move1 = (0, 0))
-   
+
     # start_time = time.time()
     # test_probability(rows, cols, num_mines)
     # end_time = time.time()
