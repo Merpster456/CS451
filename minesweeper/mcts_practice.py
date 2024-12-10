@@ -106,7 +106,13 @@ class MCTS_Node:
         
         returns: a list of possible move
         '''
-        pass
+        moves = []
+
+        for x in range(max(0, i - 1), min(self.state.rows, i + 2)):
+            for y in range(max(0, j - 1), min(self.state.cols, j + 2)):
+                if self.state.board[x][y] != '#':
+                    moves.append((i, j))
+        return moves
 
 
     def is_game_over(self):
@@ -114,10 +120,10 @@ class MCTS_Node:
         '''
         returns true if game is over else false
         '''
-
-
-        
-        pass
+        #game is over if all mines are flagged or all non-mines are revealed
+        if self.state.mines_flagged == self.state.mines or self.state.non_mines_revealed == self.state.non_mines:
+            return True
+        return False    
 
     def game_result(self):
         #TODO
@@ -125,8 +131,9 @@ class MCTS_Node:
         return 1 or -1 for win or loss. 
         (minesweeper has no tie condition)
         '''
-
-        pass
+        if self.state.mines_flagged == self.state.mines:
+            return 1
+        return -1
 
     def move(self, action):
         #TODO
@@ -134,7 +141,7 @@ class MCTS_Node:
         update state based on moves. 
         returns the new game state.
         '''
-
+        
         pass
 
     def main():
